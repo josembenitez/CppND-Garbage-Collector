@@ -35,6 +35,9 @@ private:
     unsigned arraySize;
     // Return an iterator to pointer details in refContainer.
     typename std::list<PtrDetails<T>>::iterator findPtrInfo(T *ptr);
+    // Makes this pointer point to the one given by details. Note this
+    // increments its reference count.
+    void setCurrent(PtrDetails<T> &details);
 public:
     // Define an iterator type for Pointer<T>.
     typedef Iter<T> GCiterator;
@@ -111,11 +114,8 @@ Pointer<T, size>::Pointer(T *t)
     first = false;
 
     PtrDetails<T> details { t, size };
-    details.refcount = 1;
     refContainer.push_back(details);
-    addr = details.memPtr;
-    arraySize = details.arraySize;
-    isArray = details.isArray;
+    setCurrent(details);
 }
 
 // Copy constructor.
@@ -123,10 +123,7 @@ template< class T, int size>
 Pointer<T, size>::Pointer(const Pointer &ob)
 {
     auto details = findPtrInfo(ob.addr);
-    addr = details->memPtr;
-    arraySize = details->arraySize;
-    isArray = details->isArray;
-    ++details->refcount;
+    setCurrent(*details);
 }
 
 // Destructor for Pointer.
@@ -179,11 +176,8 @@ T *Pointer<T, size>::operator=(T *t)
     auto current = findPtrInfo(addr);
     --current->refcount;
     PtrDetails<T> details { t, size };
-    details.refcount = 1;
     refContainer.push_back(details);
-    addr = details.memPtr;
-    arraySize = details.arraySize;
-    isArray = details.isArray;
+    setCurrent(details);
     return this->addr;
 }
 
@@ -193,11 +187,8 @@ Pointer<T, size> &Pointer<T, size>::operator=(Pointer &rv)
 {
     auto current = findPtrInfo(addr);
     --current->refcount;
-    addr = rv.addr;
-    arraySize = rv.arraySize;
-    isArray = rv.isArray;
     current = findPtrInfo(addr);
-    ++current->refcount;
+    setCurrent(*current);
     return *this;
 }
 
@@ -251,4 +242,15 @@ void Pointer<T, size>::shutdown()
         p->refcount = 0;
     }
     collect();
+}
+
+// Makes this pointer point to the one given by details. Note this
+// increments its reference count.
+template <typename T, int size>
+void Pointer<T, size>::setCurrent(PtrDetails<T> &details)
+{
+    this->addr = details.memPtr;
+    this->isArray = details.isArray;
+    this->arraySize = details.arraySize;
+    ++details.refcount;
 }
