@@ -176,8 +176,8 @@ T *Pointer<T, size>::operator=(T *t)
     auto current = findPtrInfo(addr);
     --current->refcount;
     PtrDetails<T> details { t, size };
-    refContainer.push_back(details);
     setCurrent(details);
+    refContainer.push_back(details);
     return this->addr;
 }
 
