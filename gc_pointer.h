@@ -114,8 +114,8 @@ Pointer<T, size>::Pointer(T *t)
     first = false;
 
     PtrDetails<T> details { t, size };
-    refContainer.push_back(details);
     setCurrent(details);
+    refContainer.push_back(details);
 }
 
 // Copy constructor.
