@@ -187,8 +187,8 @@ Pointer<T, size> &Pointer<T, size>::operator=(Pointer &rv)
 {
     auto current = findPtrInfo(addr);
     --current->refcount;
-    current = findPtrInfo(addr);
-    setCurrent(*current);
+    auto other = findPtrInfo(rv.addr);
+    setCurrent(*other);
     return *this;
 }
 
